@@ -43,6 +43,7 @@ function AllDoorsAreClosed(k, v)
     return isClose
 end
 
+-- Check if one door is closed (for card doors)
 function DoorsSwing(door)
     local isClose = nil;
 
@@ -57,6 +58,7 @@ function DoorsSwing(door)
     return isClose;
 end
 
+-- Check if all doors are closed (for card doors)
 function AllDoorsSwing(k, v)
     local _loop = true;
     local isClose = nil;
@@ -143,8 +145,6 @@ end
 function PlayKeyAnimation(playerPed, animation, dict, animToPlay)
     TaskGoStraightToCoord(playerPed, animation.coords, 0.001, 2000, animation.heading, 0.70);
 
-    -- SetEntityHeading(playerPed, animation.heading);
-
     Wait(100);
 
     local _isMoving = true;
@@ -176,6 +176,7 @@ function PlayKeyAnimation(playerPed, animation, dict, animToPlay)
         Citizen.Wait(200);
     end
 end
+
 -- Animation to repair a door
 function PlayRepairAnimation(playerPed, animation)
     local dict = 'missmechanic';

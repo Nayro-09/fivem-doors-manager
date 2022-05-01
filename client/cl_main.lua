@@ -251,6 +251,7 @@ Citizen.CreateThread(function()
 end);
 
 -- KEYBOARD
+-- Interact with doors (open/close)
 RegisterKeyMapping('interactKeyboard', 'Open/Close Doors [KB]', 'keyboard', 'E');
 RegisterCommand('interactKeyboard', function(source)
     if not useKey then
@@ -286,6 +287,7 @@ RegisterCommand('interactKeyboard', function(source)
     end
 end, false);
 
+-- repair doors
 RegisterKeyMapping('repairKeyboard', 'Repair Doors [KB]', 'keyboard', 'B');
 RegisterCommand('repairKeyboard', function(source)
     if not useKey then
@@ -306,6 +308,7 @@ RegisterCommand('repairKeyboard', function(source)
 end, false);
 
 -- CONTROLLER
+-- Interact with doors (open/close)
 RegisterKeyMapping('interactController', 'Open/Close Doors [CL]', 'PAD_DIGITALBUTTON', 'LRIGHT_INDEX');
 RegisterCommand('interactController', function(source)
     if not useKey then
@@ -341,6 +344,7 @@ RegisterCommand('interactController', function(source)
     end
 end, false);
 
+-- repair doors
 RegisterKeyMapping('repairController', 'Repair Doors [CL]', 'PAD_DIGITALBUTTON', 'LDOWN_INDEX');
 RegisterCommand('repairController', function(source)
     if not useKey then
