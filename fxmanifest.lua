@@ -9,4 +9,4 @@ game 'gta5';
 
 client_scripts {'functions/cl_function.lua', 'client/*.lua'};
 
-server_scripts {'@oxmysql/lib/MySQL.lua', 'functions/sv_function.lua', '_doorsList/*.lua', 'server/*.lua'};
+server_scripts {'@oxmysql/lib/MySQL.lua', 'functions/sv_function.lua', '_doorsList/*.lua', 'server/*.lua', 'config.lua'};
