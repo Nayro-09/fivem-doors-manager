@@ -45,18 +45,18 @@ function AddDoors(doors)
             break
         end
 
-        if data.breakable and type(data.breakable) ~= 'table' then
+        if data.type == 0 and data.breakable and type(data.breakable) ~= 'table' then
             print('[X] | Breakable must be a table: ' .. name);
             break
-        elseif not data.breakable then
-            data.breakable = nil;
-        elseif data.breakable then
+        elseif data.type == 0 and data.breakable then
             data.breakable = {
                 isBreak = false,
                 security = data.breakable.security,
                 baseHealth = data.breakable.health,
                 currentHealth = data.breakable.health
             };
+        else
+            data.breakable = nil;
         end
 
         if data.type == 0 and type(data.animations) ~= 'table' then
