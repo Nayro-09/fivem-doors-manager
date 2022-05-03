@@ -309,8 +309,8 @@ RegisterCommand('interactKeyboard', function(source)
         for _index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and not IsPedRunning(player) and
-                not IsPedSprinting(player) then
+            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and AllDoorsSwing(_index, data) and
+                not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
