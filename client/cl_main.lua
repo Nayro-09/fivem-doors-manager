@@ -9,6 +9,34 @@ AddEventHandler('doorsManager:clt_SyncDoors', function(key, card)
     keyDoorsList = key;
     cardDoorsList = card;
 
+    for index, data in pairs(key) do
+        for _index, door in ipairs(data.doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            AddDoorToSystem(hash, door.hash, door.coords);
+
+            AddTextEntry(hash, index);
+
+            DoorSystemSetDoorState(hash, data.locked and 1 or 0);
+        end
+    end
+
+    for index, data in pairs(card) do
+        for _index, door in ipairs(data.doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            AddDoorToSystem(hash, door.hash, door.coords);
+
+            AddTextEntry(hash, index);
+
+            DoorSystemSetDoorState(hash, data.locked and 1 or 0);
+
+            print(hash)
+        end
+    end
+
+    -- print(GetLabelText('1623445651'), GetLabelText('2131889455'));
+
     -- Only for debug
     print('^2[doorsManager] ^0- Sync with success !');
 end);
@@ -57,8 +85,30 @@ AddEventHandler('doorsManager:clt_updateState', function(index, state, type)
 
     if type == 0 then
         keyDoorsList[index].locked = state;
+
+        for _index, door in ipairs(keyDoorsList[index].doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            DoorSystemSetDoorState(hash, state and 1 or 0);
+
+            DoorSystemSetOpenRatio(hash, 0.00001, false, true);
+        end
     elseif type == 1 then
         cardDoorsList[index].locked = state;
+
+        for _index, door in pairs(cardDoorsList[index].doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            DoorSystemSetOpenRatio(hash, 0.0, false, true);
+
+            DoorSystemSetHoldOpen(hash, not state);
+
+            Citizen.Wait(150);
+
+            if state == false then
+                DoorSystemSetDoorState(hash, state and 1 or 0);
+            end
+        end
     end
 end);
 
@@ -84,21 +134,12 @@ Citizen.CreateThread(function()
     TriggerServerEvent('doorsManager:srv_syncDoors');
 
     while true do
-        local letSleep = true;
         local playerCoords = GetEntityCoords(PlayerPedId());
 
         for _index, data in pairs(keyDoorsList) do
             for index, doors in ipairs(data.doors) do
                 if doors.object and DoesEntityExist(doors.object) then
                     data.distanceToPlayer = #(playerCoords - GetEntityCoords(doors.object));
-
-                    if data.distanceToPlayer and data.distanceToPlayer < 40 then
-                        FreezeEntityPosition(doors.object, data.locked);
-
-                        if data.locked and doors.heading and math.floor(GetEntityHeading(doors.object)) ~= doors.heading then
-                            SetEntityHeading(doors.object, doors.heading);
-                        end
-                    end
                 else
                     data.distanceToPlayer = nil;
 
@@ -116,15 +157,12 @@ Citizen.CreateThread(function()
                 if doors.object and DoesEntityExist(doors.object) then
                     data.distanceToPlayer = #(playerCoords - GetEntityCoords(doors.object));
 
-                    if data.distanceToPlayer and data.distanceToPlayer < 40 then
-                        if data.locked and not DoorsSwing(doors) then
-                            letSleep = false;
-                        elseif data.locked and DoorsSwing(doors) then
-                            FreezeEntityPosition(doors.object, true);
-                            SetEntityHeading(doors.object, doors.heading);
-                        else
-                            FreezeEntityPosition(doors.object, false);
-                        end
+                    if DoorsSwing(doors) and data.locked then
+                        local hash = GetHashKey(_index .. '-' .. index);
+
+                        DoorSystemSetDoorState(hash, 1);
+
+                        DoorSystemSetOpenRatio(hash, 0.00001, false, true);
                     end
                 else
                     data.distanceToPlayer = nil;
@@ -151,11 +189,7 @@ Citizen.CreateThread(function()
             end
         end
 
-        if letSleep then
-            Citizen.Wait(750);
-        else
-            Citizen.Wait(100);
-        end
+        Citizen.Wait(500);
     end
 end);
 
@@ -199,6 +233,7 @@ Citizen.CreateThread(function()
         local player = PlayerPedId();
 
         for _index, data in pairs(keyDoorsList) do
+
             local coordsDistance = ClosestCoords(data.animations);
 
             if data.distanceToPlayer and coordsDistance < data.distance and AllDoorsAreClosed(_index, data) and
@@ -274,8 +309,8 @@ RegisterCommand('interactKeyboard', function(source)
         for _index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and AllDoorsSwing(_index, data) and
-                not IsPedRunning(player) and not IsPedSprinting(player) then
+            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and not IsPedRunning(player) and
+                not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
