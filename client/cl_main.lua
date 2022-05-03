@@ -30,12 +30,8 @@ AddEventHandler('doorsManager:clt_SyncDoors', function(key, card)
             AddTextEntry(hash, index);
 
             DoorSystemSetDoorState(hash, data.locked and 1 or 0);
-
-            print(hash)
         end
     end
-
-    -- print(GetLabelText('1623445651'), GetLabelText('2131889455'));
 
     -- Only for debug
     print('^2[doorsManager] ^0- Sync with success !');
