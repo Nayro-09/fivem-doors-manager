@@ -25,14 +25,15 @@ function ClosestCoords(_table)
 end
 
 -- Check if all doors are closed
-function AllDoorsAreClosed(k, v)
+function AllDoorsAreClosed(index, data)
     local _loop = true;
     local isClose = nil;
 
-    for k2, v2 in pairs(v.doors) do
-        local doorRotation = (GetEntityHeading(v2.object) - v2.heading + 180 + 360) % 360 - 180;
+    for _index, door in pairs(data.doors) do
+        local hash = GetHashKey(index .. '-' .. _index);
+        local ratio = DoorSystemGetOpenRatio(hash);
 
-        if doorRotation >= -20.0 and doorRotation <= 20.0 and _loop then
+        if ratio >= -0.1 and ratio <= 0.1 and _loop then
             isClose = true;
         else
             _loop = false;
@@ -44,37 +45,18 @@ function AllDoorsAreClosed(k, v)
 end
 
 -- Check if one door is closed (for card doors)
-function DoorsSwing(door)
+function DoorIsClose(hash)
     local isClose = nil;
 
-    local doorRotation = (GetEntityHeading(door.object) - door.heading + 180 + 360) % 360 - 180;
+    local ratio = DoorSystemGetOpenRatio(hash);
 
-    if doorRotation >= -15.0 and doorRotation <= 15.0 then
+    if ratio >= -0.1 and ratio <= 0.1 then
         isClose = true;
     else
         isClose = false;
     end
 
     return isClose;
-end
-
--- Check if all doors are closed (for card doors)
-function AllDoorsSwing(k, v)
-    local _loop = true;
-    local isClose = nil;
-
-    for k2, v2 in pairs(v.doors) do
-        local doorRotation = (GetEntityHeading(v2.object) - v2.heading + 180 + 360) % 360 - 180;
-
-        if doorRotation >= -15.0 and doorRotation <= 15.0 and _loop then
-            isClose = true;
-        else
-            _loop = false;
-            isClose = false;
-        end
-    end
-
-    return isClose
 end
 
 -- Check if a player has a valid weapon that matches the security level of the door

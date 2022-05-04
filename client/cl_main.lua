@@ -37,6 +37,20 @@ AddEventHandler('doorsManager:clt_SyncDoors', function(key, card)
     print('^2[doorsManager] ^0- Sync with success !');
 end);
 
+-- Spawn Keypads
+RegisterNetEvent('doorsManager:clt_keypads')
+AddEventHandler('doorsManager:clt_keypads', function()
+    for index, data in pairs(cardDoorsList) do
+        for _index, keypad in ipairs(data.keypads) do
+            local object
+
+            object = CreateObjectNoOffset('ch_prop_fingerprint_scanner_01d', keypad.coords, false, true, false);
+
+            SetEntityRotation(object, keypad.rot, 2, true);
+        end
+    end
+end);
+
 -- allow help info and keys
 RegisterNetEvent('doorsManager:clt_allow')
 AddEventHandler('doorsManager:clt_allow', function()
@@ -95,14 +109,38 @@ AddEventHandler('doorsManager:clt_updateState', function(index, state, type)
         for _index, door in pairs(cardDoorsList[index].doors) do
             local hash = GetHashKey(index .. '-' .. _index);
 
-            DoorSystemSetOpenRatio(hash, 0.0, false, true);
-
-            DoorSystemSetHoldOpen(hash, not state);
-
-            Citizen.Wait(150);
-
             if state == false then
-                DoorSystemSetDoorState(hash, state and 1 or 0);
+                DoorSystemSetHoldOpen(hash, true);
+
+                DoorSystemSetDoorState(hash, 0);
+            end
+        end
+
+        if state == true then
+            local loop = true;
+
+            while loop do
+                for _index, door in pairs(cardDoorsList[index].doors) do
+                    local hash = GetHashKey(index .. '-' .. _index);
+
+                    DoorSystemSetOpenRatio(hash, 0.0, false, true);
+
+                    DoorSystemSetHoldOpen(hash, false);
+
+                    DoorSystemSetDoorState(hash, 0);
+
+                    if DoorIsClose(hash) then
+                        DoorSystemSetDoorState(hash, 1);
+
+                        DoorSystemSetOpenRatio(hash, 0.00001, false, true);
+                    end
+                end
+
+                if AllDoorsAreClosed(index, cardDoorsList[index]) then
+                    loop = false;
+                end
+
+                Citizen.Wait(100);
             end
         end
     end
@@ -114,8 +152,14 @@ AddEventHandler('doorsManager:clt_updateBreak', function(index, newHealth, state
     keyDoorsList[index].breakable.currentHealth = newHealth;
     keyDoorsList[index].breakable.isBreak = state;
 
-    for _index, doors in pairs(keyDoorsList[index].doors) do
-        SetEntityHealth(doors.object, newHealth);
+    for _index, door in pairs(keyDoorsList[index].doors) do
+        local hash = GetHashKey(index .. '-' .. _index);
+
+        for _index, entity in pairs(DoorSystemGetActive(hash)) do
+            if entity[1] == hash then
+                SetEntityHealth(entity[2], newHealth);
+            end
+        end
     end
 
     if state then
@@ -125,90 +169,33 @@ AddEventHandler('doorsManager:clt_updateBreak', function(index, newHealth, state
     end
 end);
 
--- Get doors has entity, Compare distance to the player, Freeze | set heading entity, spawn keypads
-Citizen.CreateThread(function()
-    TriggerServerEvent('doorsManager:srv_syncDoors');
-
-    while true do
-        local playerCoords = GetEntityCoords(PlayerPedId());
-
-        for _index, data in pairs(keyDoorsList) do
-            for index, doors in ipairs(data.doors) do
-                if doors.object and DoesEntityExist(doors.object) then
-                    data.distanceToPlayer = #(playerCoords - GetEntityCoords(doors.object));
-                else
-                    data.distanceToPlayer = nil;
-
-                    doors.object = GetClosestObjectOfType(doors.coords, 1.0, doors.hash, false, false, false);
-
-                    if data.breakable then
-                        SetEntityHealth(doors.object, data.breakable.currentHealth);
-                    end
-                end
-            end
-        end
-
-        for _index, data in pairs(cardDoorsList) do
-            for index, doors in ipairs(data.doors) do
-                if doors.object and DoesEntityExist(doors.object) then
-                    data.distanceToPlayer = #(playerCoords - GetEntityCoords(doors.object));
-
-                    if DoorsSwing(doors) and data.locked then
-                        local hash = GetHashKey(_index .. '-' .. index);
-
-                        DoorSystemSetDoorState(hash, 1);
-
-                        DoorSystemSetOpenRatio(hash, 0.00001, false, true);
-                    end
-                else
-                    data.distanceToPlayer = nil;
-
-                    doors.object = GetClosestObjectOfType(doors.coords, 1.0, doors.hash, false, false, false);
-                end
-            end
-
-            for index, keypad in ipairs(data.keypads) do
-                if data.distanceToPlayer and data.distanceToPlayer < 40 and not keypad.object and
-                    not DoesEntityExist(keypad.object) then
-                    local object
-
-                    object = CreateObjectNoOffset('ch_prop_fingerprint_scanner_01d', keypad.coords, false, true, false);
-
-                    SetEntityRotation(object, keypad.rot, 2, true);
-
-                    keypad.object = object;
-                elseif data.distanceToPlayer and data.distanceToPlayer > 40 and keypad.object and
-                    DoesEntityExist(keypad.object) then
-                    DeleteObject(keypad.object);
-                    keypad.object = nil;
-                end
-            end
-        end
-
-        Citizen.Wait(500);
-    end
-end);
-
 -- Breach system/update health of the door
 Citizen.CreateThread(function()
     while true do
         local letSleep = true;
         local player = PlayerPedId();
 
-        for _index, data in pairs(keyDoorsList) do
-            if data.distanceToPlayer and data.distanceToPlayer < 30 then
-                for index, doors in ipairs(data.doors) do
-                    if not data.private and data.breakable and not data.breakable.isBreak and
-                        BreakableSecurity(player, data.breakable) == true then
-                        letSleep = false;
+        for index, data in pairs(keyDoorsList) do
+            if not data.private and data.breakable and not data.breakable.isBreak and
+                #(GetEntityCoords(player) - data.doors[1].coords) < 40 then
+                for _index, door in ipairs(data.doors) do
+                    local hash = GetHashKey(index .. '-' .. _index);
 
-                        if data.breakable.currentHealth ~= GetEntityHealth(doors.object) or data.breakable.currentHealth ~=
-                            GetEntityHealth(doors.object) and IsPedPerformingMeleeAction(player) then
+                    for _, entity in pairs(DoorSystemGetActive(hash)) do
+                        if entity[1] == hash then
+                            if GetEntityHealth(entity[2]) ~= 1000 and BreakableSecurity(player, data.breakable) == true then
+                                letSleep = false;
 
-                            TriggerServerEvent('doorsManager:srv_updateBreak', _index, GetEntityHealth(doors.object));
+                                if data.breakable.currentHealth ~= GetEntityHealth(entity[2]) or
+                                    data.breakable.currentHealth ~= GetEntityHealth(entity[2]) and
+                                    IsPedPerformingMeleeAction(player) then
+
+                                    TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(entity[2]));
+                                end
+                            else
+                                SetEntityHealth(entity[2], data.breakable.currentHealth);
+                            end
                         end
-                    elseif data.breakable and not data.breakable.isBreak then
-                        SetEntityHealth(doors.object, data.breakable.currentHealth);
                     end
                 end
             end
@@ -217,23 +204,27 @@ Citizen.CreateThread(function()
         if letSleep then
             Citizen.Wait(1500);
         else
-            Citizen.Wait(275);
+            Citizen.Wait(225);
         end
     end
 end);
 
 -- Display Help info
 Citizen.CreateThread(function()
+    TriggerServerEvent('doorsManager:srv_syncDoors');
+
+    Wait(5000);
+
+    TriggerEvent('doorsManager:clt_keypads');
+
     while true do
         local letSleep = true;
         local player = PlayerPedId();
 
-        for _index, data in pairs(keyDoorsList) do
-
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and AllDoorsAreClosed(_index, data) and
-                displayHelp then
+            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) and displayHelp then
                 letSleep = false;
 
                 local helpMessage = '~r~fermer';
@@ -258,11 +249,10 @@ Citizen.CreateThread(function()
             end
         end
 
-        for _index, data in pairs(cardDoorsList) do
+        for index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and displayHelp and data.locked and
-                AllDoorsSwing(_index, data) then
+            if coordsDistance < data.distance and displayHelp and data.locked and AllDoorsAreClosed(index, data) then
                 letSleep = false;
 
                 if IsUsingKeyboard() then
@@ -288,29 +278,29 @@ RegisterCommand('interactKeyboard', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and AllDoorsAreClosed(_index, data) and
-                not IsPedRunning(player) and not IsPedSprinting(player) then
+            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) and not IsPedRunning(player) and
+                not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
         end
 
-        for _index, data in pairs(cardDoorsList) do
+        for index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and AllDoorsSwing(_index, data) and
+            if coordsDistance < data.distance and data.locked and AllDoorsAreClosed(index, data) and
                 not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
@@ -324,15 +314,15 @@ RegisterCommand('repairKeyboard', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and data.breakable and coordsDistance < data.distance and
-                AllDoorsAreClosed(_index, data) and not IsPedRunning(player) and not IsPedSprinting(player) then
+            if data.breakable and coordsDistance < data.distance and AllDoorsAreClosed(index, data) and
+                not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_repair', _index);
+                TriggerServerEvent('doorsManager:srv_repair', index);
             end
         end
     end
@@ -345,29 +335,29 @@ RegisterCommand('interactController', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and AllDoorsAreClosed(_index, data) and
-                not IsPedRunning(player) and not IsPedSprinting(player) then
+            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) and not IsPedRunning(player) and
+                not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
         end
 
-        for _index, data in pairs(cardDoorsList) do
+        for index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and AllDoorsSwing(_index, data) and
+            if coordsDistance < data.distance and data.locked and AllDoorsSwing(index, data) and
                 not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
@@ -381,15 +371,15 @@ RegisterCommand('repairController', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and data.breakable and coordsDistance < data.distance and
-                AllDoorsAreClosed(_index, data) and not IsPedRunning(player) and not IsPedSprinting(player) then
+            if data.breakable and coordsDistance < data.distance and AllDoorsAreClosed(index, data) and
+                not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_repair', _index);
+                TriggerServerEvent('doorsManager:srv_repair', index);
             end
         end
     end
