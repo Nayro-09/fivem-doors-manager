@@ -155,11 +155,15 @@ AddEventHandler('doorsManager:clt_updateBreak', function(index, newHealth, state
     for _index, door in pairs(keyDoorsList[index].doors) do
         local hash = GetHashKey(index .. '-' .. _index);
 
-        for _index, entity in pairs(DoorSystemGetActive(hash)) do
-            if entity[1] == hash then
-                SetEntityHealth(entity[2], newHealth);
-            end
-        end
+        -- local object = GetDoor(hash);
+
+        SetEntityHealth(GetDoor(hash), newHealth);
+
+        -- for _index, entity in pairs(DoorSystemGetActive(hash)) do
+        --     if entity[1] == hash then
+        --         SetEntityHealth(entity[2], newHealth);
+        --     end
+        -- end
     end
 
     if state then
@@ -181,22 +185,36 @@ Citizen.CreateThread(function()
                 for _index, door in ipairs(data.doors) do
                     local hash = GetHashKey(index .. '-' .. _index);
 
-                    for _, entity in pairs(DoorSystemGetActive(hash)) do
-                        if entity[1] == hash then
-                            if GetEntityHealth(entity[2]) ~= 1000 and BreakableSecurity(player, data.breakable) == true then
-                                letSleep = false;
+                    local object = GetDoor(hash);
 
-                                if data.breakable.currentHealth ~= GetEntityHealth(entity[2]) or
-                                    data.breakable.currentHealth ~= GetEntityHealth(entity[2]) and
-                                    IsPedPerformingMeleeAction(player) then
+                    if GetEntityHealth(object) ~= 1000 and BreakableSecurity(player, data.breakable) == true then
+                        letSleep = false;
 
-                                    TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(entity[2]));
-                                end
-                            else
-                                SetEntityHealth(entity[2], data.breakable.currentHealth);
-                            end
+                        if data.breakable.currentHealth ~= GetEntityHealth(object) or data.breakable.currentHealth ~=
+                            GetEntityHealth(object) and IsPedPerformingMeleeAction(player) then
+
+                            TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(object));
                         end
+                    else
+                        SetEntityHealth(object, data.breakable.currentHealth);
                     end
+
+                    -- for _, entity in pairs(DoorSystemGetActive(hash)) do
+                    --     if entity[1] == hash then
+                    --         if GetEntityHealth(entity[2]) ~= 1000 and BreakableSecurity(player, data.breakable) == true then
+                    --             letSleep = false;
+
+                    --             if data.breakable.currentHealth ~= GetEntityHealth(entity[2]) or
+                    --                 data.breakable.currentHealth ~= GetEntityHealth(entity[2]) and
+                    --                 IsPedPerformingMeleeAction(player) then
+
+                    --                 TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(entity[2]));
+                    --             end
+                    --         else
+                    --             SetEntityHealth(entity[2], data.breakable.currentHealth);
+                    --         end
+                    --     end
+                    -- end
                 end
             end
         end

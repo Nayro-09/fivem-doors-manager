@@ -59,6 +59,17 @@ function DoorIsClose(hash)
     return isClose;
 end
 
+-- Get door has entity from DoorSystem
+function GetDoor(hash)
+    for _index, entity in pairs(DoorSystemGetActive()) do
+        if entity[1] == hash then
+            return entity[2];
+        end
+    end
+
+    return nil;
+end
+
 -- Check if a player has a valid weapon that matches the security level of the door
 function BreakableSecurity(playerPed, data)
     return Switch(data.security, {
