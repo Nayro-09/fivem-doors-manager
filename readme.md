@@ -3,7 +3,7 @@
 
 ### Features
 - Optimized
-- Based on a database (all state stay persistant after a server restart/shutdown)
+- Database (all states remain persistent after a server restart/stop)
 - Item to open a door
 - Can be private (require a job to open) 
 - Breach system
@@ -36,3 +36,11 @@ CREATE TABLE IF NOT EXISTS `doors_manager` (
 ```
 
 ## Configuration
+Try to follow this ;)
+### Add Doors to the system
+
+1. In `_doorList` folder create a new file `yourName.lua`
+    - You can create as many files you want
+    - Try to name your file to match an location (Ex: police_station.lua)
+
+2. How to add a new door in the system
