@@ -154,22 +154,15 @@ AddEventHandler('doorsManager:clt_updateBreak', function(index, newHealth, state
 
     for _index, door in pairs(keyDoorsList[index].doors) do
         local hash = GetHashKey(index .. '-' .. _index);
+        local object = GetDoor(hash);
 
-        -- local object = GetDoor(hash);
+        SetEntityHealth(object, newHealth);
 
-        SetEntityHealth(GetDoor(hash), newHealth);
-
-        -- for _index, entity in pairs(DoorSystemGetActive(hash)) do
-        --     if entity[1] == hash then
-        --         SetEntityHealth(entity[2], newHealth);
-        --     end
-        -- end
-    end
-
-    if state then
-        PlaySoundFromEntity(GetSoundId(), 'CRASH', keyDoorsList[index].doors[1].object, 'PAPARAZZO_03A', true, 0);
-        Citizen.Wait(500);
-        PlaySoundFromEntity(GetSoundId(), 'CRASH', keyDoorsList[index].doors[1].object, 'PAPARAZZO_03A', true, 0);
+        if state then
+            PlaySoundFromEntity(GetSoundId(), 'CRASH', object, 'PAPARAZZO_03A', true, 0);
+            Citizen.Wait(500);
+            PlaySoundFromEntity(GetSoundId(), 'CRASH', object, 'PAPARAZZO_03A', true, 0);
+        end
     end
 end);
 
@@ -177,44 +170,30 @@ end);
 Citizen.CreateThread(function()
     while true do
         local letSleep = true;
-        local player = PlayerPedId();
+        local ped = PlayerPedId();
+        local player = PlayerId();
 
         for index, data in pairs(keyDoorsList) do
             if not data.private and data.breakable and not data.breakable.isBreak and
-                #(GetEntityCoords(player) - data.doors[1].coords) < 40 then
+                #(GetEntityCoords(ped) - data.doors[1].coords) < 40 then
                 for _index, door in ipairs(data.doors) do
                     local hash = GetHashKey(index .. '-' .. _index);
-
                     local object = GetDoor(hash);
 
-                    if GetEntityHealth(object) ~= 1000 and BreakableSecurity(player, data.breakable) == true then
+                    if BreakableSecurity(ped, data.breakable) == true and GetEntityHealth(object) ~= 1000 then
                         letSleep = false;
 
-                        if data.breakable.currentHealth ~= GetEntityHealth(object) or data.breakable.currentHealth ~=
-                            GetEntityHealth(object) and IsPedPerformingMeleeAction(player) then
+                        if IsPlayerFreeAiming(player) and data.breakable.currentHealth ~= GetEntityHealth(object) or
+                            IsPedPerformingMeleeAction(ped) and data.breakable.currentHealth ~= GetEntityHealth(object) then
+                            print('trigger')
 
                             TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(object));
+                        else
+                            SetEntityHealth(object, data.breakable.currentHealth);
                         end
                     else
                         SetEntityHealth(object, data.breakable.currentHealth);
                     end
-
-                    -- for _, entity in pairs(DoorSystemGetActive(hash)) do
-                    --     if entity[1] == hash then
-                    --         if GetEntityHealth(entity[2]) ~= 1000 and BreakableSecurity(player, data.breakable) == true then
-                    --             letSleep = false;
-
-                    --             if data.breakable.currentHealth ~= GetEntityHealth(entity[2]) or
-                    --                 data.breakable.currentHealth ~= GetEntityHealth(entity[2]) and
-                    --                 IsPedPerformingMeleeAction(player) then
-
-                    --                 TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(entity[2]));
-                    --             end
-                    --         else
-                    --             SetEntityHealth(entity[2], data.breakable.currentHealth);
-                    --         end
-                    --     end
-                    -- end
                 end
             end
         end
@@ -222,7 +201,7 @@ Citizen.CreateThread(function()
         if letSleep then
             Citizen.Wait(1500);
         else
-            Citizen.Wait(225);
+            Citizen.Wait(300);
         end
     end
 end);
