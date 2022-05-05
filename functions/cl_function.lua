@@ -25,14 +25,15 @@ function ClosestCoords(_table)
 end
 
 -- Check if all doors are closed
-function AllDoorsAreClosed(k, v)
+function AllDoorsAreClosed(index, data)
     local _loop = true;
     local isClose = nil;
 
-    for k2, v2 in pairs(v.doors) do
-        local doorRotation = (GetEntityHeading(v2.object) - v2.heading + 180 + 360) % 360 - 180;
+    for _index, door in pairs(data.doors) do
+        local hash = GetHashKey(index .. '-' .. _index);
+        local ratio = DoorSystemGetOpenRatio(hash);
 
-        if doorRotation >= -20.0 and doorRotation <= 20.0 and _loop then
+        if ratio >= -0.1 and ratio <= 0.1 and _loop then
             isClose = true;
         else
             _loop = false;
@@ -43,12 +44,13 @@ function AllDoorsAreClosed(k, v)
     return isClose
 end
 
-function DoorsSwing(door)
+-- Check if one door is closed (for card doors)
+function DoorIsClose(hash)
     local isClose = nil;
 
-    local doorRotation = (GetEntityHeading(door.object) - door.heading + 180 + 360) % 360 - 180;
+    local ratio = DoorSystemGetOpenRatio(hash);
 
-    if doorRotation >= -15.0 and doorRotation <= 15.0 then
+    if ratio >= -0.1 and ratio <= 0.1 then
         isClose = true;
     else
         isClose = false;
@@ -57,22 +59,15 @@ function DoorsSwing(door)
     return isClose;
 end
 
-function AllDoorsSwing(k, v)
-    local _loop = true;
-    local isClose = nil;
-
-    for k2, v2 in pairs(v.doors) do
-        local doorRotation = (GetEntityHeading(v2.object) - v2.heading + 180 + 360) % 360 - 180;
-
-        if doorRotation >= -15.0 and doorRotation <= 15.0 and _loop then
-            isClose = true;
-        else
-            _loop = false;
-            isClose = false;
+-- Get door has entity from DoorSystem
+function GetDoor(hash)
+    for _index, entity in pairs(DoorSystemGetActive()) do
+        if entity[1] == hash then
+            return entity[2];
         end
     end
 
-    return isClose
+    return nil;
 end
 
 -- Check if a player has a valid weapon that matches the security level of the door
@@ -143,8 +138,6 @@ end
 function PlayKeyAnimation(playerPed, animation, dict, animToPlay)
     TaskGoStraightToCoord(playerPed, animation.coords, 0.001, 2000, animation.heading, 0.70);
 
-    -- SetEntityHeading(playerPed, animation.heading);
-
     Wait(100);
 
     local _isMoving = true;
@@ -176,6 +169,7 @@ function PlayKeyAnimation(playerPed, animation, dict, animToPlay)
         Citizen.Wait(200);
     end
 end
+
 -- Animation to repair a door
 function PlayRepairAnimation(playerPed, animation)
     local dict = 'missmechanic';

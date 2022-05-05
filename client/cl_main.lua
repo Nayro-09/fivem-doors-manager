@@ -9,8 +9,46 @@ AddEventHandler('doorsManager:clt_SyncDoors', function(key, card)
     keyDoorsList = key;
     cardDoorsList = card;
 
+    for index, data in pairs(key) do
+        for _index, door in ipairs(data.doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            AddDoorToSystem(hash, door.hash, door.coords);
+
+            AddTextEntry(hash, index);
+
+            DoorSystemSetDoorState(hash, data.locked and 1 or 0);
+        end
+    end
+
+    for index, data in pairs(card) do
+        for _index, door in ipairs(data.doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            AddDoorToSystem(hash, door.hash, door.coords);
+
+            AddTextEntry(hash, index);
+
+            DoorSystemSetDoorState(hash, data.locked and 1 or 0);
+        end
+    end
+
     -- Only for debug
     print('^2[doorsManager] ^0- Sync with success !');
+end);
+
+-- Spawn Keypads
+RegisterNetEvent('doorsManager:clt_keypads')
+AddEventHandler('doorsManager:clt_keypads', function()
+    for index, data in pairs(cardDoorsList) do
+        for _index, keypad in ipairs(data.keypads) do
+            local object
+
+            object = CreateObjectNoOffset('ch_prop_fingerprint_scanner_01d', keypad.coords, false, true, false);
+
+            SetEntityRotation(object, keypad.rot, 2, true);
+        end
+    end
 end);
 
 -- allow help info and keys
@@ -57,8 +95,54 @@ AddEventHandler('doorsManager:clt_updateState', function(index, state, type)
 
     if type == 0 then
         keyDoorsList[index].locked = state;
+
+        for _index, door in ipairs(keyDoorsList[index].doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            DoorSystemSetDoorState(hash, state and 1 or 0);
+
+            DoorSystemSetOpenRatio(hash, 0.00001, false, true);
+        end
     elseif type == 1 then
         cardDoorsList[index].locked = state;
+
+        for _index, door in pairs(cardDoorsList[index].doors) do
+            local hash = GetHashKey(index .. '-' .. _index);
+
+            if state == false then
+                DoorSystemSetHoldOpen(hash, true);
+
+                DoorSystemSetDoorState(hash, 0);
+            end
+        end
+
+        if state == true then
+            local loop = true;
+
+            while loop do
+                for _index, door in pairs(cardDoorsList[index].doors) do
+                    local hash = GetHashKey(index .. '-' .. _index);
+
+                    DoorSystemSetOpenRatio(hash, 0.0, false, true);
+
+                    DoorSystemSetHoldOpen(hash, false);
+
+                    DoorSystemSetDoorState(hash, 0);
+
+                    if DoorIsClose(hash) then
+                        DoorSystemSetDoorState(hash, 1);
+
+                        DoorSystemSetOpenRatio(hash, 0.00001, false, true);
+                    end
+                end
+
+                if AllDoorsAreClosed(index, cardDoorsList[index]) then
+                    loop = false;
+                end
+
+                Citizen.Wait(100);
+            end
+        end
     end
 end);
 
@@ -68,93 +152,16 @@ AddEventHandler('doorsManager:clt_updateBreak', function(index, newHealth, state
     keyDoorsList[index].breakable.currentHealth = newHealth;
     keyDoorsList[index].breakable.isBreak = state;
 
-    for _index, doors in pairs(keyDoorsList[index].doors) do
-        SetEntityHealth(doors.object, newHealth);
-    end
+    for _index, door in pairs(keyDoorsList[index].doors) do
+        local hash = GetHashKey(index .. '-' .. _index);
+        local object = GetDoor(hash);
 
-    if state then
-        PlaySoundFromEntity(GetSoundId(), 'CRASH', keyDoorsList[index].doors[1].object, 'PAPARAZZO_03A', true, 0);
-        Citizen.Wait(500);
-        PlaySoundFromEntity(GetSoundId(), 'CRASH', keyDoorsList[index].doors[1].object, 'PAPARAZZO_03A', true, 0);
-    end
-end);
+        SetEntityHealth(object, newHealth);
 
--- Get doors has entity, Compare distance to the player, Freeze | set heading entity, spawn keypads
-Citizen.CreateThread(function()
-    TriggerServerEvent('doorsManager:srv_syncDoors');
-
-    while true do
-        local letSleep = true;
-        local playerCoords = GetEntityCoords(PlayerPedId());
-
-        for _index, data in pairs(keyDoorsList) do
-            for index, doors in ipairs(data.doors) do
-                if doors.object and DoesEntityExist(doors.object) then
-                    data.distanceToPlayer = #(playerCoords - GetEntityCoords(doors.object));
-
-                    if data.distanceToPlayer and data.distanceToPlayer < 40 then
-                        FreezeEntityPosition(doors.object, data.locked);
-
-                        if data.locked and doors.heading and math.floor(GetEntityHeading(doors.object)) ~= doors.heading then
-                            SetEntityHeading(doors.object, doors.heading);
-                        end
-                    end
-                else
-                    data.distanceToPlayer = nil;
-
-                    doors.object = GetClosestObjectOfType(doors.coords, 1.0, doors.hash, false, false, false);
-
-                    if data.breakable then
-                        SetEntityHealth(doors.object, data.breakable.currentHealth);
-                    end
-                end
-            end
-        end
-
-        for _index, data in pairs(cardDoorsList) do
-            for index, doors in ipairs(data.doors) do
-                if doors.object and DoesEntityExist(doors.object) then
-                    data.distanceToPlayer = #(playerCoords - GetEntityCoords(doors.object));
-
-                    if data.distanceToPlayer and data.distanceToPlayer < 40 then
-                        if data.locked and not DoorsSwing(doors) then
-                            letSleep = false;
-                        elseif data.locked and DoorsSwing(doors) then
-                            FreezeEntityPosition(doors.object, true);
-                            SetEntityHeading(doors.object, doors.heading);
-                        else
-                            FreezeEntityPosition(doors.object, false);
-                        end
-                    end
-                else
-                    data.distanceToPlayer = nil;
-
-                    doors.object = GetClosestObjectOfType(doors.coords, 1.0, doors.hash, false, false, false);
-                end
-            end
-
-            for index, keypad in ipairs(data.keypads) do
-                if data.distanceToPlayer and data.distanceToPlayer < 40 and not keypad.object and
-                    not DoesEntityExist(keypad.object) then
-                    local object
-
-                    object = CreateObjectNoOffset('ch_prop_fingerprint_scanner_01d', keypad.coords, false, true, false);
-
-                    SetEntityRotation(object, keypad.rot, 2, true);
-
-                    keypad.object = object;
-                elseif data.distanceToPlayer and data.distanceToPlayer > 40 and keypad.object and
-                    DoesEntityExist(keypad.object) then
-                    DeleteObject(keypad.object);
-                    keypad.object = nil;
-                end
-            end
-        end
-
-        if letSleep then
-            Citizen.Wait(750);
-        else
-            Citizen.Wait(100);
+        if state then
+            PlaySoundFromEntity(GetSoundId(), 'CRASH', object, 'PAPARAZZO_03A', true, 0);
+            Citizen.Wait(500);
+            PlaySoundFromEntity(GetSoundId(), 'CRASH', object, 'PAPARAZZO_03A', true, 0);
         end
     end
 end);
@@ -163,22 +170,29 @@ end);
 Citizen.CreateThread(function()
     while true do
         local letSleep = true;
-        local player = PlayerPedId();
+        local ped = PlayerPedId();
+        local player = PlayerId();
 
-        for _index, data in pairs(keyDoorsList) do
-            if data.distanceToPlayer and data.distanceToPlayer < 30 then
-                for index, doors in ipairs(data.doors) do
-                    if not data.private and data.breakable and not data.breakable.isBreak and
-                        BreakableSecurity(player, data.breakable) == true then
+        for index, data in pairs(keyDoorsList) do
+            if not data.private and data.breakable and not data.breakable.isBreak and
+                #(GetEntityCoords(ped) - data.doors[1].coords) < 40 then
+                for _index, door in ipairs(data.doors) do
+                    local hash = GetHashKey(index .. '-' .. _index);
+                    local object = GetDoor(hash);
+
+                    if BreakableSecurity(ped, data.breakable) == true and GetEntityHealth(object) ~= 1000 then
                         letSleep = false;
 
-                        if data.breakable.currentHealth ~= GetEntityHealth(doors.object) or data.breakable.currentHealth ~=
-                            GetEntityHealth(doors.object) and IsPedPerformingMeleeAction(player) then
+                        if IsPlayerFreeAiming(player) and data.breakable.currentHealth ~= GetEntityHealth(object) or
+                            IsPedPerformingMeleeAction(ped) and data.breakable.currentHealth ~= GetEntityHealth(object) then
+                            print('trigger')
 
-                            TriggerServerEvent('doorsManager:srv_updateBreak', _index, GetEntityHealth(doors.object));
+                            TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(object));
+                        else
+                            SetEntityHealth(object, data.breakable.currentHealth);
                         end
-                    elseif data.breakable and not data.breakable.isBreak then
-                        SetEntityHealth(doors.object, data.breakable.currentHealth);
+                    else
+                        SetEntityHealth(object, data.breakable.currentHealth);
                     end
                 end
             end
@@ -187,22 +201,27 @@ Citizen.CreateThread(function()
         if letSleep then
             Citizen.Wait(1500);
         else
-            Citizen.Wait(275);
+            Citizen.Wait(300);
         end
     end
 end);
 
 -- Display Help info
 Citizen.CreateThread(function()
+    TriggerServerEvent('doorsManager:srv_syncDoors');
+
+    Wait(5000);
+
+    TriggerEvent('doorsManager:clt_keypads');
+
     while true do
         local letSleep = true;
         local player = PlayerPedId();
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and AllDoorsAreClosed(_index, data) and
-                displayHelp then
+            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) and displayHelp then
                 letSleep = false;
 
                 local helpMessage = '~r~fermer';
@@ -227,11 +246,10 @@ Citizen.CreateThread(function()
             end
         end
 
-        for _index, data in pairs(cardDoorsList) do
+        for index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and displayHelp and data.locked and
-                AllDoorsSwing(_index, data) then
+            if coordsDistance < data.distance and displayHelp and data.locked and AllDoorsAreClosed(index, data) then
                 letSleep = false;
 
                 if IsUsingKeyboard() then
@@ -251,34 +269,35 @@ Citizen.CreateThread(function()
 end);
 
 -- KEYBOARD
+-- Interact with doors (open/close)
 RegisterKeyMapping('interactKeyboard', 'Open/Close Doors [KB]', 'keyboard', 'E');
 RegisterCommand('interactKeyboard', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and AllDoorsAreClosed(_index, data) and
-                not IsPedRunning(player) and not IsPedSprinting(player) then
+            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) and not IsPedRunning(player) and
+                not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
         end
 
-        for _index, data in pairs(cardDoorsList) do
+        for index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and AllDoorsSwing(_index, data) and
+            if coordsDistance < data.distance and data.locked and AllDoorsAreClosed(index, data) and
                 not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
@@ -286,54 +305,56 @@ RegisterCommand('interactKeyboard', function(source)
     end
 end, false);
 
+-- repair doors
 RegisterKeyMapping('repairKeyboard', 'Repair Doors [KB]', 'keyboard', 'B');
 RegisterCommand('repairKeyboard', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and data.breakable and coordsDistance < data.distance and
-                AllDoorsAreClosed(_index, data) and not IsPedRunning(player) and not IsPedSprinting(player) then
+            if data.breakable and coordsDistance < data.distance and AllDoorsAreClosed(index, data) and
+                not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_repair', _index);
+                TriggerServerEvent('doorsManager:srv_repair', index);
             end
         end
     end
 end, false);
 
 -- CONTROLLER
+-- Interact with doors (open/close)
 RegisterKeyMapping('interactController', 'Open/Close Doors [CL]', 'PAD_DIGITALBUTTON', 'LRIGHT_INDEX');
 RegisterCommand('interactController', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and AllDoorsAreClosed(_index, data) and
-                not IsPedRunning(player) and not IsPedSprinting(player) then
+            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) and not IsPedRunning(player) and
+                not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
         end
 
-        for _index, data in pairs(cardDoorsList) do
+        for index, data in pairs(cardDoorsList) do
             local coordsDistance = ClosestCoords(data.keypads);
 
-            if data.distanceToPlayer and coordsDistance < data.distance and data.locked and AllDoorsSwing(_index, data) and
+            if coordsDistance < data.distance and data.locked and AllDoorsSwing(index, data) and
                 not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_updateState', _index);
+                TriggerServerEvent('doorsManager:srv_updateState', index);
 
                 break
             end
@@ -341,20 +362,21 @@ RegisterCommand('interactController', function(source)
     end
 end, false);
 
+-- repair doors
 RegisterKeyMapping('repairController', 'Repair Doors [CL]', 'PAD_DIGITALBUTTON', 'LDOWN_INDEX');
 RegisterCommand('repairController', function(source)
     if not useKey then
         local player = PlayerPedId(source);
 
-        for _index, data in pairs(keyDoorsList) do
+        for index, data in pairs(keyDoorsList) do
             local coordsDistance = ClosestCoords(data.animations);
 
-            if data.distanceToPlayer and data.breakable and coordsDistance < data.distance and
-                AllDoorsAreClosed(_index, data) and not IsPedRunning(player) and not IsPedSprinting(player) then
+            if data.breakable and coordsDistance < data.distance and AllDoorsAreClosed(index, data) and
+                not IsPedRunning(player) and not IsPedSprinting(player) then
                 displayHelp = false;
                 useKey = true;
 
-                TriggerServerEvent('doorsManager:srv_repair', _index);
+                TriggerServerEvent('doorsManager:srv_repair', index);
             end
         end
     end
