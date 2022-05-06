@@ -7,6 +7,9 @@
 <h4 align="center">Doors Manager is an advanced door locking system using <a href="https://github.com/esx-framework/esx-legacy" target="_blank">ESX</a>.</h4>
 
 <p align="center">
+	<a href="https://fivem.net/">
+	<img alt="FiveM" src="https://img.shields.io/badge/-FiveM-F6DAC4?style=flat-square&logo=fivem&logoColor=525252&logoWidth=12">
+		</a>
     <a href="https://github.com/Nayro-09/fivem-doors-manager/releases">
         <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Nayro-09/fivem-doors-manager?color=C4F6E9&label=Version&style=flat-square">
     </a>
