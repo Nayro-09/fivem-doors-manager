@@ -67,17 +67,15 @@ CREATE TABLE IF NOT EXISTS `doors_manager` (
 
 ## How to use
 
-## Table of Contents
+### Table of Contents
 - [Add a Door](#Add-a-Door)
-  - [Create a file](#Create-a-new-file)
-  - [Naming a Door](#Naming-the-Doors)
-  - [Push Doors in the database](#Push-Doors-in-the-database)
+  - [Create a file](#create-a-new-file-)
+  - [Naming a Door](#naming-the-Doors-)
+  - [Push Doors in the database](#push-Doors-in-the-database-)
 - [Configure a Door](#Configure-a-Door)
-  - [Parameters](#Parameters)
-  - [Key Door](#Key-Door)
-  - [Card Door](#Card-Door)
-
----
+  - [Parameters](#parameters-)
+  - [Key Door](#key-Door-)
+  - [Card Door](#card-Door-)
 
 ## Add a Door
 ### Create a new file :
@@ -139,7 +137,7 @@ AddDoors({
 doors = {{
     hash = -1215222675,
     coords = vector3(434.747, -980.619, 30.839)
-}};
+}},
 ```
 
 ### Breakable (only for key door) :
@@ -153,7 +151,7 @@ doors = {{
 breakable = {
     security = 'medium', -- low = Shotguns, crowbar, unarmed | medium = Shotguns, crowbar | high = Shotguns
     health = 450
-}
+},
 ```
 
 ### Animations (only for key door) :
@@ -170,7 +168,7 @@ animations = {{
  }, {
     coords = vector3(442.470, -993.257, 30.689),
     heading = 270.0
-}}
+}},
 ```
 
 ### Keypads (only for card door) :
@@ -187,7 +185,7 @@ keypads = {{
 }, {
     coords = vector3(450.832, -987.212, 31.100),
     rot = vector3(0.000, -0.000, 180.000)
-}}
+}},
 ```
 
 ---
