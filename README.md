@@ -10,7 +10,7 @@
     <a href="https://github.com/Nayro-09/fivem-doors-manager/releases">
         <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Nayro-09/fivem-doors-manager?color=C4F6E9&label=Version&style=flat-square">
     </a>
-		<a href="#">
+		<a href="https://github.com/Nayro-09/fivem-doors-manager">
         	<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/Nayro-09/fivem-doors-manager?color=CFC4F6&label=Size&style=flat-square">
     </a>
     <a href="https://github.com/Nayro-09/fivem-doors-manager/releases">
