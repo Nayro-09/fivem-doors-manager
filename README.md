@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="#Features">Features</a> •
-  <a href="#Download-&-Installation">Download & Installation</a> •
+  <a href="#Download--Installation">Download & Installation</a> •
   <a href="#How-to-use">How to use</a>
 </p>
 
