@@ -1,5 +1,30 @@
-# Doors Manager [ESX]
-`Doors Manager` is an advanced door locking system using [ESX](https://github.com/esx-framework/esx-legacy).
+<h1 align="center">
+  <br>
+  Doors Manager
+  <br>
+</h1>
+
+<h4 align="center">Doors Manager is an advanced door locking system using <a href="https://github.com/esx-framework/esx-legacy" target="_blank">ESX</a>.</h4>
+
+<p align="center">
+    <a href="https://github.com/Nayro-09/fivem-doors-manager/releases">
+        <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/Nayro-09/fivem-doors-manager?color=C4F6E9&label=Version&style=flat-square">
+    </a>
+		<a href="#">
+        	<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/Nayro-09/fivem-doors-manager?color=CFC4F6&label=Size&style=flat-square">
+    </a>
+    <a href="https://github.com/Nayro-09/fivem-doors-manager/releases">
+        <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/Nayro-09/fivem-doors-manager/total?color=C4DFF6&label=Downloads&style=flat-square">
+    </a>
+</p>
+
+<p align="center">
+  <a href="#Features">Features</a> •
+  <a href="#Download & Installation">Download & Installation</a> •
+  <a href="#How to use">How to use</a>
+</p>
+
+---
 
 ### Features
 - Optimized
@@ -11,7 +36,7 @@
     - Key doors
     - Card doors
 
-## Installation
+## Download & Installation
 1. Download the latest version in [releases](https://github.com/Nayro-09/fivem-doors-manager/releases)
 2. Add the ressource to your server folder and rename it to `doors_manager`
 3. Add `ensure doors_manager` in your `server.cfg` :
@@ -35,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `doors_manager` (
 ) ENGINE=InnoDB;
 ```
 
-## Configuration
+## How to use
 Try to follow this ;)
 ### Add Doors to the system
 
