@@ -12,7 +12,7 @@ RegisterCommand('pushDoors', function(source, args)
                     {
                         ['@identifier'] = _index,
                         ['@type'] = v.type,
-                        ['@locked'] = Boolean_to_string(v.locked),
+                        ['@locked'] = Boolean_to_string(true),
                         ['@distance'] = v.distance,
                         ['@private'] = Boolean_to_string(v.private),
                         ['@doors'] = Table_to_string(v.doors),

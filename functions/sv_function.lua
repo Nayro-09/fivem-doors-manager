@@ -8,13 +8,8 @@ function AddDoors(doors)
             break
         end
 
-        if type(data.type) ~= 'number' or data.type ~= 0 and data.type ~= 1 and data.type ~= 2 then
+        if type(data.type) ~= 'number' or data.type ~= 0 and data.type ~= 1 then
             print('[X] | The type of the doors must be a number between [0-2]: ' .. name);
-            break
-        end
-
-        if type(data.locked) ~= 'boolean' then
-            print('[X] | Locked must be a boolean value (true, false): ' .. name);
             break
         end
 

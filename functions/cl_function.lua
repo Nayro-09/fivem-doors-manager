@@ -70,6 +70,31 @@ function GetDoor(hash)
     return nil;
 end
 
+-- distance check for help message
+function DistanceCheck(table, type)
+    if type == 0 then
+        for index, data in pairs(table) do
+            local coordsDistance = ClosestCoords(data.animations);
+
+            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) then
+                return true, data;
+            end
+        end
+
+        return nil, nil;
+    elseif type == 1 then
+        for index, data in pairs(table) do
+            local coordsDistance = ClosestCoords(data.keypads);
+
+            if coordsDistance < data.distance and data.locked and AllDoorsAreClosed(index, data) then
+                return true, data;
+            end
+        end
+
+        return nil, nil;
+    end
+end
+
 -- Check if a player has a valid weapon that matches the security level of the door
 function BreakableSecurity(playerPed, data)
     return Switch(data.security, {

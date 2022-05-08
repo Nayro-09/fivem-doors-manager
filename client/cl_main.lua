@@ -1,6 +1,7 @@
 local keyDoorsList = {};
 local cardDoorsList = {};
 local displayHelp = true;
+local checking = true;
 local useKey = false;
 
 -- Responce from the DB sync
@@ -216,47 +217,57 @@ Citizen.CreateThread(function()
 
     while true do
         local letSleep = true;
-        local player = PlayerPedId();
 
-        for index, data in pairs(keyDoorsList) do
-            local coordsDistance = ClosestCoords(data.animations);
+        if checking then
+            keyDist, keyData = DistanceCheck(keyDoorsList, 0);
+            cardDist, cardData = DistanceCheck(cardDoorsList, 1);
+        end
 
-            if coordsDistance < data.distance and AllDoorsAreClosed(index, data) and displayHelp then
-                letSleep = false;
+        if keyDist and displayHelp then
+            local coordsDistance = ClosestCoords(keyData.animations);
+            if coordsDistance > keyData.distance then
+                checking = true;
+            else
+                checking = false;
+            end
 
-                local helpMessage = '~r~fermer';
+            letSleep = false;
 
-                if data.locked then
-                    helpMessage = '~g~ouvrir';
-                end
+            local helpMessage = '~r~fermer';
 
-                if IsUsingKeyboard() then
-                    if data.breakable and data.breakable.isBreak then
-                        DisplayHelpText('Appuyez sur ~INPUT_4746F32D~ pour ~b~réparer ~s~la porte');
-                    else
-                        DisplayHelpText('Appuyez sur ~INPUT_BF65597C~ pour ' .. helpMessage .. '~s~ la porte');
-                    end
+            if keyData.locked then
+                helpMessage = '~g~ouvrir';
+            end
+
+            if IsUsingKeyboard() then
+                if keyData.breakable and keyData.breakable.isBreak then
+                    DisplayHelpText('Appuyez sur ~INPUT_4746F32D~ pour ~b~réparer ~s~la porte');
                 else
-                    if data.breakable and data.breakable.isBreak then
-                        DisplayHelpText('Appuyez sur ~INPUT_D54FC5E8~ pour ~b~réparer ~s~la porte');
-                    else
-                        DisplayHelpText('Appuyez sur ~INPUT_3D25A3A6~ pour ' .. helpMessage .. '~s~ la porte');
-                    end
+                    DisplayHelpText('Appuyez sur ~INPUT_BF65597C~ pour ' .. helpMessage .. '~s~ la porte');
+                end
+            else
+                if keyData.breakable and keyData.breakable.isBreak then
+                    DisplayHelpText('Appuyez sur ~INPUT_D54FC5E8~ pour ~b~réparer ~s~la porte');
+                else
+                    DisplayHelpText('Appuyez sur ~INPUT_3D25A3A6~ pour ' .. helpMessage .. '~s~ la porte');
                 end
             end
         end
 
-        for index, data in pairs(cardDoorsList) do
-            local coordsDistance = ClosestCoords(data.keypads);
+        if cardDist and displayHelp then
+            local coordsDistance = ClosestCoords(cardData.keypads);
+            if coordsDistance > cardData.distance then
+                checking = true;
+            else
+                checking = false;
+            end
 
-            if coordsDistance < data.distance and displayHelp and data.locked and AllDoorsAreClosed(index, data) then
-                letSleep = false;
+            letSleep = false;
 
-                if IsUsingKeyboard() then
-                    DisplayHelpText('Appuyez sur ~INPUT_BF65597C~ pour ~g~ouvrir ~s~la porte');
-                else
-                    DisplayHelpText('Appuyez sur ~INPUT_3D25A3A6~ pour ~g~ouvrir ~s~la porte');
-                end
+            if IsUsingKeyboard() then
+                DisplayHelpText('Appuyez sur ~INPUT_BF65597C~ pour ~g~ouvrir ~s~la porte');
+            else
+                DisplayHelpText('Appuyez sur ~INPUT_3D25A3A6~ pour ~g~ouvrir ~s~la porte');
             end
         end
 
