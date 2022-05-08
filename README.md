@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `doors_manager` (
 ## How to use
 
 ### Table of Contents
-- [Parameters](#parameters-)
+- [Parameters](#parameters)
 - [Add a Door](#Add-a-Door)
   - [Create a file](#create-a-new-file-)
   - [Naming the Door](#naming-the-door-)
