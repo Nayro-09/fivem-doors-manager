@@ -68,49 +68,15 @@ CREATE TABLE IF NOT EXISTS `doors_manager` (
 ## How to use
 
 ### Table of Contents
+- [Parameters](#parameters-)
 - [Add a Door](#Add-a-Door)
   - [Create a file](#create-a-new-file-)
-  - [Naming a Door](#naming-the-Doors-)
+  - [Naming the Door](#naming-the-door-)
+  - [Configure Key Door](#configure-key-door-)
+  - [Configure Card Door](#configure-card-door-)
   - [Push Doors in the database](#push-Doors-in-the-database-)
-- [Configure a Door](#Configure-a-Door)
-  - [Parameters](#parameters-)
-  - [Key Door](#key-Door-)
-  - [Card Door](#card-Door-)
 
-## Add a Door
-### Create a new file :
-1. In `_doorList` folder create a new file `yourName.lua`
-    - You can create as many files you want
-    - Try to name your file to match an location (Ex: `police_station.lua`)
-
-### Naming the Door :
-1. In the file you have just created :
-```lua
-AddDoors({});
-```
-2. Give a name to your Door :
-    - Make sure that the name is unique and easy to identify
-    - I usually name my doors using the door location and the door name (Ex: `['police:mainDoor']`)
-```lua
-AddDoors({
-    ['yourName'] = {},
-});
-
--- You can add as many doors you want 
-
-AddDoors({
-    ['yourName1'] = {},
-    ['yourName2'] = {},
-    ['yourName3'] = {}
-});
-```
-
-### Push Doors in the database :
-1. Configure all your doors
-2. Execute this command `/pushDoors`
-
-## Configure a Door
-### Parameters :
+## Parameters
 | Param      | Type     | Options                          | Required | Description                                                  |
 | ---------- | -------- | -------------------------------- | -------- | ------------------------------------------------------------ |
 | type       | `number` | `0` key door, `1` card door      | Yes      | The type of the door                                         |
@@ -190,13 +156,56 @@ keypads = {{
 
 ---
 
-### Key Door :
-<!-- ```lua
+## Add a Door
+### Create a new file :
+1. In `_doorList` folder create a new file `yourName.lua`
+    - You can create as many files you want
+    - Try to name your file to match an location (Ex: `police_station.lua`)
+
+### Naming the Door :
+1. In the file you have just created :
+```lua
+AddDoors({});
+```
+2. Give a name to your Door :
+    - Make sure that the name is unique and easy to identify
+    - I usually name my doors using the door location and the door name (Ex: `['police:mainDoor']`)
+```lua
+AddDoors({
+    ['yourName'] = {},
+});
+
+-- You can add as many doors you want 
+
+AddDoors({
+    ['yourName1'] = {},
+    ['yourName2'] = {},
+    ['yourName3'] = {}
+});
+```
+
+### Configure Key Door :
+1. To make your life easier, I recommend you to use the following ressource [demmycam](https://github.com/DemmyDemon/demmycam) by DemmyDemon
+    - You can use it to get the door coords, heading and player coords/heading
+2. For key door you gonna need to configure the following parameters :	
+    - `type` must be `0`
+    - `distance`
+    - `private`
+    - `jobs`
+    - `keys`
+    - `doors`
+    - `breakable`
+    - `animations`
+
+#### Exemple :
+```lua
 AddDoors({
     ['yourName'] = {
         type = 0,
         distance = 1.5,
         private = false,
+        jobs = {'police'},
+        keys = {'police_station_key'},
         doors = {{
             hash = -131296141,
             coords = vector3(443.029, -994.542, 30.839)
@@ -204,8 +213,6 @@ AddDoors({
             hash = -131296141,
             coords = vector3(443.029, -991.942, 30.839)
         }},
-        jobs = {'police'},
-        keys = {'police_station_key'},
         breakable = {
             security = 'medium', -- low = Shotguns, crowbar, unarmed | medium = Shotguns, crowbar | high = Shotguns
             health = 200
@@ -219,6 +226,49 @@ AddDoors({
         }}
     }
 });
-``` -->
+```
 
-### Card Door :
+### Configure Card Door :
+1. To make your life easier, I recommend you to use the following ressource [demmycam](https://github.com/DemmyDemon/demmycam) by DemmyDemon
+    - You can use it to get the door coords, heading, keypads coords and player coords/heading
+2. For key door you gonna need to configure the following parameters :	
+    - `type` must be `1`
+    - `distance`
+    - `private`
+    - `jobs`
+    - `keys`
+    - `doors`
+    - `keypads`
+    - `timer`
+
+#### Exemple :
+```lua
+AddDoors({
+    ['yourName'] = {
+        type = 1,
+        distance = 1.25,
+        private = false,
+        jobs = {'police'},
+        keys = {'police_station_key'},
+        doors = {{
+            hash = -2023754432,
+            coords = vector3(469.968, -1014.452, 26.536)
+        }, {
+            hash = -2023754432,
+            coords = vector3(467.372, -1014.452, 26.536)
+        }},
+        keypads = {{
+            coords = vector3(467.372, -1015.480, 26.75),
+            rot = vector3(0.000, -0.000, 90.000)
+        }, {
+            coords = vector3(467.372, -1013.204, 26.75),
+            rot = vector3(0.000, 0.000, 90.000)
+        }},
+        timer = 12000
+    }
+});
+```
+
+### Push Doors in the database :
+1. Configure all your doors
+2. Execute this command `/pushDoors`
