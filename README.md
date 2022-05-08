@@ -27,6 +27,8 @@
   <a href="#How-to-use">How to use</a>
 </p>
 
+![Imgur](https://i.imgur.com/RheyGGd.jpg)
+
 ---
 
 ## Features
