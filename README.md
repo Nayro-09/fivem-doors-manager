@@ -23,6 +23,7 @@
 
 <p align="center">
   <a href="#Features">Features</a> •
+  <a href="#To-do">To do</a> •
   <a href="#Download--Installation">Download & Installation</a> •
   <a href="#How-to-use">How to use</a>
 </p>
@@ -41,6 +42,13 @@
 - Multiple doors type
   - Key doors
   - Card doors
+
+## To do
+
+- [x] Rework the DisplayHelpInfo Thread (takes too many resources)
+- [ ] Rework the Breach system (takes too many resources)
+- [ ] Add language support
+- [ ] Add a new type of door (gates, garage, etc.)
 
 ## Download & Installation
 
