@@ -233,23 +233,23 @@ Citizen.CreateThread(function()
 
             letSleep = false;
 
-            local helpMessage = '~r~fermer';
+            local doorStateMessage = _('close_door');
 
             if keyData.locked then
-                helpMessage = '~g~ouvrir';
+                doorStateMessage = _('open_door');
             end
 
             if IsUsingKeyboard() then
                 if keyData.breakable and keyData.breakable.isBreak then
-                    DisplayHelpText('Appuyez sur ~INPUT_4746F32D~ pour ~b~réparer ~s~la porte');
+                    DisplayHelpText(_('press') .. ' ~INPUT_4746F32D~ ' .. _('to') .. ' ' .. _('repair_door'));
                 else
-                    DisplayHelpText('Appuyez sur ~INPUT_BF65597C~ pour ' .. helpMessage .. '~s~ la porte');
+                    DisplayHelpText(_('press') .. ' ~INPUT_BF65597C~ ' .. _('to') .. ' ' .. doorStateMessage);
                 end
             else
                 if keyData.breakable and keyData.breakable.isBreak then
-                    DisplayHelpText('Appuyez sur ~INPUT_D54FC5E8~ pour ~b~réparer ~s~la porte');
+                    DisplayHelpText(_('press') .. ' ~INPUT_D54FC5E8~ ' .. _('to') .. ' ' .. _('repair_door'));
                 else
-                    DisplayHelpText('Appuyez sur ~INPUT_3D25A3A6~ pour ' .. helpMessage .. '~s~ la porte');
+                    DisplayHelpText(_('press') .. ' ~INPUT_3D25A3A6~ ' .. _('to') .. ' ' .. doorStateMessage);
                 end
             end
         end
@@ -265,9 +265,10 @@ Citizen.CreateThread(function()
             letSleep = false;
 
             if IsUsingKeyboard() then
-                DisplayHelpText('Appuyez sur ~INPUT_BF65597C~ pour ~g~ouvrir ~s~la porte');
+                DisplayHelpText(_('press') .. ' ~INPUT_BF65597C~ ' .. _('to') .. ' ' .. _('open_door'));
             else
-                DisplayHelpText('Appuyez sur ~INPUT_3D25A3A6~ pour ~g~ouvrir ~s~la porte');
+                DisplayHelpText(_('press') .. ' ~INPUT_3D25A3A6~ ' .. _('to') .. ' ' .. _('open_door'));
+                
             end
         end
 

@@ -195,9 +195,9 @@ function InteractWithKeyDoors(source, index, state)
 
     state = not state;
     if state == true then
-        message = 'Porte ~r~Fermée';
+        message = _('door_close');
     elseif state == false then
-        message = 'Porte ~g~Ouverte';
+        message = _('door_open');
     end
 
     TriggerClientEvent('doorsManager:clt_information', source, message);
@@ -251,7 +251,7 @@ function InteractWithCardDoors(source, index, state, timer)
         TriggerClientEvent('doorsManager:clt_updateState', -1, index, true, 1);
     end
 
-    TriggerClientEvent('doorsManager:clt_information', source, 'Porte ~g~Ouverte');
+    TriggerClientEvent('doorsManager:clt_information', source, _('door_open'));
 
     Wait(timer);
 
@@ -261,7 +261,7 @@ function InteractWithCardDoors(source, index, state, timer)
         TriggerClientEvent('doorsManager:clt_updateState', -1, index, false, 1);
     end
 
-    TriggerClientEvent('doorsManager:clt_information', source, 'Porte ~b~Verrouillée');
+    TriggerClientEvent('doorsManager:clt_information', source, _('door_locked'));
     TriggerClientEvent('doorsManager:clt_allow', source);
 end
 

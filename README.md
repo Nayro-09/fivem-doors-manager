@@ -46,8 +46,8 @@
 ## To do
 
 - [x] Rework the DisplayHelpInfo Thread (takes too many resources)
+- [x] Add language support
 - [ ] Rework the Breach system (takes too many resources)
-- [ ] Add language support
 - [ ] Add a new type of door (gates, garage, etc.)
 
 ## Download & Installation
@@ -73,6 +73,12 @@ CREATE TABLE IF NOT EXISTS `doors_manager` (
     `timer` SMALLINT(5) DEFAULT NULL, 
     PRIMARY KEY (`identifier`)
 ) ENGINE=InnoDB;
+```
+
+5. Add a new item in your `items` table :
+```sql
+INSERT INTO `items`(`name`, `label`, `weight`, `rare`, `can_remove`) VALUES 
+    ('door_repair_kit', 'Door repair kit', 5, 0, 1)
 ```
 
 ## How to use

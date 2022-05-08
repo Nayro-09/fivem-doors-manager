@@ -104,14 +104,13 @@ AddEventHandler('doorsManager:srv_updateState', function(index, type)
             TriggerClientEvent('doorsManager:clt_allow', _source);
 
             TriggerClientEvent('doorsManager:clt_information', _source,
-                '~r~Vous n\'avez pas la permission ' .. StateMessage(data.locked)[1] .. ' cette porte.');
+                data.locked and _('permission_open_door') or _('permission_close_door'));
         end
     elseif not data.private then
         if data.breakable and data.breakable.isBreak then
             TriggerClientEvent('doorsManager:clt_allow', _source);
 
-            return TriggerClientEvent('doorsManager:clt_information', _source,
-                '~r~Cette porte semble avoir été enfoncée.');
+            return TriggerClientEvent('doorsManager:clt_information', _source, _('door_is_breach'));
         end
 
         if IsAuthorized(data.jobs, xPlayer.job.name) or HasKey(data.keys, xPlayer.inventory) then
@@ -123,8 +122,7 @@ AddEventHandler('doorsManager:srv_updateState', function(index, type)
         else
             TriggerClientEvent('doorsManager:clt_allow', _source);
 
-            return TriggerClientEvent('doorsManager:clt_information', _source, '~r~Vous n\'avez pas la clé pour ' ..
-                StateMessage(data.locked)[2] .. ' cette porte.');
+            return TriggerClientEvent('doorsManager:clt_information', _source, data.locked and _('item_open_door') or _('item_close_door'));
         end
     end
 end)
@@ -146,7 +144,7 @@ AddEventHandler('doorsManager:srv_updateBreak', function(index, newHealth)
 
         if updateDoor then
             TriggerClientEvent('doorsManager:clt_updateState', -1, index, true, 0);
-            TriggerClientEvent('doorsManager:clt_information', _source, 'Porte ~b~Enfoncée');
+            TriggerClientEvent('doorsManager:clt_information', _source, _('door_breach'));
         end
     end
 
@@ -178,22 +176,22 @@ AddEventHandler('doorsManager:srv_repair', function(index)
             local updateBreak = UpdateDoorBreak(index, data.breakable);
 
             if updateBreak then
-                TriggerClientEvent('doorsManager:clt_updateBreak', -1, index, data.breakable.baseHealth, data.breakable.isBreak);
+                TriggerClientEvent('doorsManager:clt_updateBreak', -1, index, data.breakable.baseHealth,
+                    data.breakable.isBreak);
 
-                TriggerClientEvent('doorsManager:clt_information', _source, 'Porte ~g~Réparée');
+                TriggerClientEvent('doorsManager:clt_information', _source, _('door_repair'));
 
                 TriggerClientEvent('doorsManager:clt_allow', _source);
             end
         else
             TriggerClientEvent('doorsManager:clt_allow', _source);
 
-            return TriggerClientEvent('doorsManager:clt_information', _source, 'Vous n\'avez pas de ~b~' ..
-                xPlayer.getInventoryItem('door_repair_kit').label .. '~s~ pour réparer cete porte.');
+            return TriggerClientEvent('doorsManager:clt_information', _source, _('item_repair_door'));
         end
 
     elseif not data.breakable.isBreak then
         TriggerClientEvent('doorsManager:clt_allow', _source);
 
-        return TriggerClientEvent('doorsManager:clt_information', _source, '~b~Cette porte semble être en bon état.');
+        return TriggerClientEvent('doorsManager:clt_information', _source, _('door_not_breach'));
     end
 end)
