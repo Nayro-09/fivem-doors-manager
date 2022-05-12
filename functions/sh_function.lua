@@ -8,7 +8,6 @@ function _(str, ...)
             return 'Translation [' .. Config.Locale .. '][' .. str .. '] does not exists';
         end
     else
-        print(Locales[Config.Locale])
         return 'Locale [' .. Config.Locale .. '] does not exists';
     end
 end

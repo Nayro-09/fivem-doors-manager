@@ -122,7 +122,8 @@ AddEventHandler('doorsManager:srv_updateState', function(index, type)
         else
             TriggerClientEvent('doorsManager:clt_allow', _source);
 
-            return TriggerClientEvent('doorsManager:clt_information', _source, data.locked and _('item_open_door') or _('item_close_door'));
+            return TriggerClientEvent('doorsManager:clt_information', _source,
+                data.locked and _('item_open_door') or _('item_close_door'));
         end
     end
 end)
@@ -135,9 +136,8 @@ AddEventHandler('doorsManager:srv_updateBreak', function(index, newHealth)
 
     local updatedHealth = data.breakable.currentHealth - (data.breakable.currentHealth - newHealth);
 
-    data.breakable.currentHealth = updatedHealth;
-
     if updatedHealth <= 0 then
+        data.breakable.currentHealth = 0;
         data.breakable.isBreak = not data.breakable.isBreak;
 
         local updateDoor = UpdateDoorState(index, true);
@@ -146,12 +146,15 @@ AddEventHandler('doorsManager:srv_updateBreak', function(index, newHealth)
             TriggerClientEvent('doorsManager:clt_updateState', -1, index, true, 0);
             TriggerClientEvent('doorsManager:clt_information', _source, _('door_breach'));
         end
+    else
+        data.breakable.currentHealth = updatedHealth;
     end
 
     local updateBreak = UpdateDoorBreak(index, data.breakable);
 
     if updateBreak then
-        TriggerClientEvent('doorsManager:clt_updateBreak', -1, index, updatedHealth, data.breakable.isBreak);
+        TriggerClientEvent('doorsManager:clt_updateBreak', -1, index, data.breakable.currentHealth,
+            data.breakable.isBreak);
     end
 end)
 
@@ -168,7 +171,7 @@ AddEventHandler('doorsManager:srv_repair', function(index)
 
             TriggerClientEvent('doorsManager:clt_animation', _source, index, 1);
 
-            Wait(19000);
+            Citizen.Wait(19000);
 
             data.breakable.isBreak = not data.breakable.isBreak;
             data.breakable.currentHealth = data.breakable.baseHealth;

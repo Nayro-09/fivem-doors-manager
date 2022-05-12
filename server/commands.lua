@@ -28,6 +28,8 @@ RegisterCommand('pushDoors', function(source, args)
             end
         end)
     end
+
+    TriggerEvent('doorsManager:srv_syncDoors');
 end, true)
 
 RegisterCommand('deleteDoors', function(source, args)
