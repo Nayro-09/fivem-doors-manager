@@ -70,6 +70,21 @@ function GetDoor(hash)
     return nil;
 end
 
+-- find doors by coords, model
+function FindDoor(table, coords, model)
+    for index, data in pairs(table) do
+        if not data.private and data.breakable and not data.breakable.isBreak then
+            for __, door in ipairs(data.doors) do
+                if #door.coords - #coords <= 0.5 and door.hash == model then
+                    return index, data;
+                end
+            end
+        end
+    end
+
+    return nil;
+end
+
 -- distance check for help message
 function DistanceCheck(table, type)
     if type == 0 then

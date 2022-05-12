@@ -1,7 +1,9 @@
 local keyDoorsList = {};
 local cardDoorsList = {};
+local spawned = false;
 local displayHelp = true;
 local checking = true;
+local breaching = false;
 local useKey = false;
 
 -- Responce from the DB sync
@@ -37,6 +39,32 @@ AddEventHandler('doorsManager:clt_SyncDoors', function(key, card)
     -- Only for debug
     print('^2[doorsManager] ^0- Sync with success !');
 end);
+
+-- Trigger DB sync on spawn
+AddEventHandler('playerSpawned', function()
+    if not spawned then
+        spawned = true;
+
+        TriggerServerEvent('doorsManager:srv_syncDoors');
+
+        Citizen.Wait(2500);
+
+        TriggerEvent('doorsManager:clt_keypads');
+    end
+end);
+
+-- Trigger DB sync on resource start
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if (GetCurrentResourceName() == resourceName) then
+        TriggerServerEvent('doorsManager:srv_syncDoors');
+
+        Citizen.Wait(2500);
+
+        TriggerEvent('doorsManager:clt_keypads');
+    end
+
+    return
+end)
 
 -- Spawn Keypads
 RegisterNetEvent('doorsManager:clt_keypads')
@@ -165,56 +193,29 @@ AddEventHandler('doorsManager:clt_updateBreak', function(index, newHealth, state
             PlaySoundFromEntity(GetSoundId(), 'CRASH', object, 'PAPARAZZO_03A', true, 0);
         end
     end
+
+    breaching = false;
 end);
 
--- Breach system/update health of the door
-Citizen.CreateThread(function()
-    while true do
-        local letSleep = true;
-        local ped = PlayerPedId();
-        local player = PlayerId();
+-- Breach system
+AddEventHandler('entityDamaged', function(entity, culprit, weapon, baseDamage)
+    local doorEntity = entity;
+    local doorIndex, doorData = FindDoor(keyDoorsList, GetEntityCoords(doorEntity), GetEntityModel(doorEntity));
 
-        for index, data in pairs(keyDoorsList) do
-            if not data.private and data.breakable and not data.breakable.isBreak and
-                #(GetEntityCoords(ped) - data.doors[1].coords) < 40 then
-                for _index, door in ipairs(data.doors) do
-                    local hash = GetHashKey(index .. '-' .. _index);
-                    local object = GetDoor(hash);
+    if not breaching and doorIndex and doorData and BreakableSecurity(PlayerPedId(), doorData.breakable) == true then
+        breaching = true;
 
-                    if BreakableSecurity(ped, data.breakable) == true and GetEntityHealth(object) ~= 1000 then
-                        letSleep = false;
+        SetEntityHealth(doorEntity, doorData.breakable.currentHealth);
 
-                        if IsPlayerFreeAiming(player) and data.breakable.currentHealth ~= GetEntityHealth(object) or
-                            IsPedPerformingMeleeAction(ped) and data.breakable.currentHealth ~= GetEntityHealth(object) then
-                            print('trigger')
+        local weaponDamage = GetWeaponDamage(weapon) * 8;
+        local newHealth = weaponDamage ~= 0 and doorData.breakable.currentHealth - weaponDamage or doorData.breakable.currentHealth - 75;
 
-                            TriggerServerEvent('doorsManager:srv_updateBreak', index, GetEntityHealth(object));
-                        else
-                            SetEntityHealth(object, data.breakable.currentHealth);
-                        end
-                    else
-                        SetEntityHealth(object, data.breakable.currentHealth);
-                    end
-                end
-            end
-        end
-
-        if letSleep then
-            Citizen.Wait(1500);
-        else
-            Citizen.Wait(300);
-        end
+        TriggerServerEvent('doorsManager:srv_updateBreak', doorIndex, newHealth);
     end
 end);
 
 -- Display Help info
 Citizen.CreateThread(function()
-    TriggerServerEvent('doorsManager:srv_syncDoors');
-
-    Wait(5000);
-
-    TriggerEvent('doorsManager:clt_keypads');
-
     while true do
         local letSleep = true;
 
@@ -268,7 +269,6 @@ Citizen.CreateThread(function()
                 DisplayHelpText(_('press') .. ' ~INPUT_BF65597C~ ' .. _('to') .. ' ' .. _('open_door'));
             else
                 DisplayHelpText(_('press') .. ' ~INPUT_3D25A3A6~ ' .. _('to') .. ' ' .. _('open_door'));
-                
             end
         end
 
