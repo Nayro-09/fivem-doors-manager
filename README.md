@@ -45,9 +45,9 @@
 
 ## To do
 
-- [x] Rework the DisplayHelpInfo Thread (takes too many resources)
-- [x] Add language support
-- [ ] Rework the Breach system (takes too many resources)
+- [x] ~~Rework the DisplayHelpInfo Thread (takes too many resources)~~
+- [x] ~~Add language support~~
+- [x] ~~Rework the Breach system (takes too many resources)~~
 - [ ] Add a new type of door (gates, garage, etc.)
 
 ## Download & Installation
