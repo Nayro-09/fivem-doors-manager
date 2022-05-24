@@ -114,13 +114,16 @@ INSERT INTO `items`(`name`, `label`, `weight`, `rare`, `can_remove`) VALUES
 | hash    | `number`           | The door hash    |
 | coords  | `vector3(x, y, z)` | The door coords  |
 
-#### Exemple :
+<details>
+  <summary>Exemple</summary>
+  
 ```lua
 doors = {{
     hash = -1215222675,
     coords = vector3(434.747, -980.619, 30.839)
 }},
 ```
+</details>
 
 ### Breakable (only for key door) :
 | Param    | Type     | Options                       | Description             |
@@ -128,13 +131,16 @@ doors = {{
 | security | `string` | `'low'`, `'medium'`, `'high'` | The security level      |
 | health   | `number` | recommended `300` to `850`    | The health of the doors |
 
-#### Exemple :
+<details>
+  <summary>Exemple</summary>
+  
 ```lua
 breakable = {
     security = 'medium', -- low = Shotguns, crowbar, unarmed | medium = Shotguns, crowbar | high = Shotguns
     health = 450
 },
 ```
+</details>
 
 ### Animations (only for key door) :
 | Param    | Type               | Description                                                |
@@ -142,7 +148,9 @@ breakable = {
 | coords   | `vector3(x, y, z)` | The coords where the animation will be played              |
 | heading  | `number`           | The orientation of the player when the animation is played |
 
-#### Exemple :
+<details>
+  <summary>Exemple</summary>
+ 
 ```lua
 animations = {{
     coords = vector3(443.525, -993.242, 30.689),
@@ -152,6 +160,7 @@ animations = {{
     heading = 270.0
 }},
 ```
+</details>
 
 ### Keypads (only for card door) :
 | Param    | Type               | Description                                                                 |
@@ -159,7 +168,9 @@ animations = {{
 | coords   | `vector3(x, y, z)` | The coords where the animation will be played and the keypad will be placed |
 | rot      | `vector3(x, y, z)` | Orientation offset for keypad placement                                     |
 
-#### Exemple :
+<details>
+  <summary>Exemple</summary>
+ 
 ```lua
 keypads = {{
     coords = vector3(449.889, -987.392, 31.100),
@@ -169,6 +180,7 @@ keypads = {{
     rot = vector3(0.000, -0.000, 180.000)
 }},
 ```
+</details>
 
 ---
 
